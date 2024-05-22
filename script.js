@@ -23,6 +23,16 @@ const howToPlayButton = {
    text: "How to Play"
 }
 
+function drawButton(button) {
+   ctx.fillStyle = "white";
+   ctx.fillRect(button.x, button.y, button.width, button.height);
+   ctx.strokeStyle = "black";
+   ctx.font = "20px Ariel";
+   ctx.textAlign = "center";
+   ctx.textBaseline = "middle";
+   ctx.fillText(button.text, button.x + button.width / 2, button.y + button.height / 2);
+}
+
 const player = {
    x: 300,
    y: 100,
@@ -55,13 +65,27 @@ function drawSprite(img, sX, sY, sW, sH, dX, dY, dW, dH, flipH) {
 }
 
 function animate() {
-   ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
+   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-   drawSprite(playerSprite, player.width * player.frameX, player.height * player.frameY, player.width, player.height, player.x, player.y, player.width, player.height, player.facingRight)
+   if(gameState === "start") {
+      drawStartScreen();
+   } else if (gameState === "play") {
+      ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+      drawSprite(playerSprite, player.width * player.frameX, player.height * player.frameY, player.width, player.height, player.x, player.y, player.width, player.height, player.facingRight);
+      movePlayer();
+   } else if (gameState === "howToPlay") {
+      document.getElementById('instructions').style.display = 'block';
+   }
 
-   movePlayer()
    requestAnimationFrame(animate)
 }
+
+function drawStartScreen() {
+   ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+   drawButton(playButton);
+   drawButton(howToPlayButton);
+}
+
 animate()
 
 window.addEventListener("keydown", function(e) {
@@ -71,6 +95,30 @@ window.addEventListener("keydown", function(e) {
 window.addEventListener("keyup", function(e) {
    delete keys[e.keyCode];
 });
+
+canvas.addEventListener("click", function(e) {
+   const rect = canvas.getBoundingClientRect();
+   const mouseX = e.clientX - rect.left;
+   const mouseY = e.clientY - rect.top;
+
+   if (gameState === "start") {
+      if (isInsideButton(mouseX, mouseY, playButton)) {
+         gameState = "play";
+      } else if (isInsideButton(mouseX, mouseY, howToPlayButton)) {
+         gameState = "howToPlay";
+      }
+   }
+})
+
+// wheck backButton pressed, hide instructions
+document.getElementById('backButton').addEventListener('click', function() {
+   gameState = "start";
+   document.getElementById('instructions').style.display = 'none';
+})
+
+function isInsideButton(x, y, button) {
+   return x > button.x && x < button.x + button.width && y > button.y && y < button.y + button.height;
+}
 
 function movePlayer() {
    // 
