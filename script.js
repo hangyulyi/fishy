@@ -55,7 +55,7 @@ window.addEventListener("keyup", function(e) {
 });
 
 function movePlayer() {
-   // TODO: add water whee physics
+   // 
    // for up arrow
    if(keys[38] && player.y > 10) {
       player.y -= player.speed;
