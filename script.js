@@ -4,12 +4,30 @@ canvas.width = 800
 canvas.height = 500
 
 const keys = []
+let gameState = "start";
+
+// buttons
+const playButton = {
+   x: 350,
+   y: 200,
+   width: 100,
+   height: 50,
+   text: "Play"
+}
+
+const howToPlayButton = {
+   x: 350,
+   y: 300,
+   width: 100,
+   height: 50,
+   text: "How to Play"
+}
 
 const player = {
    x: 300,
    y: 100,
-   width: 76,
-   height: 69,
+   width: 65,
+   height: 55,
    frameX: 0,
    frameY: 0,
    speed: 1,
@@ -57,24 +75,49 @@ window.addEventListener("keyup", function(e) {
 function movePlayer() {
    // 
    // for up arrow
-   if(keys[38] && player.y > 10) {
-      player.y -= player.speed;
+   if(keys[38]) {
+      player.velocityY -= player.acceleration;
    }
 
    // for down arrow
-   if(keys[40] && player.y < 450) {
-      player.y += player.speed;
+   if(keys[40]) {
+      player.velocityY += player.acceleration;
    }
 
    // for left arrow
-   if(keys[37] && player.x > 0) {
-      player.x -= player.speed;
+   if(keys[37]) {
+      player.velocityX -= player.acceleration;
       player.facingRight = false;
    }
 
    // for right arrow; make sure to flip
    if(keys[39]) {
-      player.x += player.speed;
+      player.velocityX += player.acceleration;
       player.facingRight = true;
+   }
+
+   player.velocityX *= player.drag;
+   player.velocityY *= player.drag;
+
+   // update player based on velocity
+   player.x += player.velocityX;
+   player.y += player.velocityY;
+
+   // bounds for player
+   if (player.x < 0) {
+      player.x = 0;
+      player.velocityX = 0;
+   }
+   if (player.x + player.width > canvas.width) {
+      player.x = canvas.width - player.width;
+      player.velocityX = 0;
+   }
+   if (player.y < 0) {
+      player.y = 0;
+      player.velocityY = 0;
+   }
+   if (player.y + player.height > canvas.height) {
+      player.y = canvas.height - player.height;
+      player.velocityY = 0;
    }
 }
