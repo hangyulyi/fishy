@@ -89,7 +89,7 @@ playerSprite.src = "images/purplefish.png"
 
 const fishes = []
 const fishSprite = new Image();
-fishSprite.src = "images/purplefish.png"
+fishSprite.src = "images/bluefish.png"
 
 const background = new Image();
 background.src = "images/background.png"
