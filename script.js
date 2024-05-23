@@ -4,6 +4,8 @@ canvas.width = 800
 canvas.height = 500
 
 const keys = []
+
+// start, play, howToPlay, pause, gameOver
 let gameState = "start";
 
 // buttons
@@ -70,16 +72,14 @@ function drawButton(button) {
 const playerInitialState = {
    x: 300,
    y: 100,
-   width: 65,
-   height: 55,
-   frameX: 0,
-   frameY: 0,
+   width: 62,
+   height: 51,
    speed: 1,
    velocityX: 0,
    velocityY: 0,
    acceleration: 0.2,
    drag: 0.98,
-   facingRight: false
+   facingRight: false,
 }
 
 let player = { ...playerInitialState }
@@ -96,6 +96,8 @@ background.src = "images/background.png"
 
 function drawSprite(img, sX, sY, sW, sH, dX, dY, dW, dH, flipH) {
    ctx.save();
+   ctx.imageSmoothingEnables = false;
+
    if (flipH) {
       ctx.scale(-1, 1);
       dX = -dX - dW;
@@ -113,7 +115,7 @@ function animate() {
    } else if (gameState === "play") {
       ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
       drawFishes();
-      drawSprite(playerSprite, player.width * player.frameX, player.height * player.frameY, player.width, player.height, player.x, player.y, player.width, player.height, player.facingRight);
+      drawSprite(playerSprite, 0, 0, 62, 51, player.x, player.y, player.width, player.height, player.facingRight);
       drawButton(pauseButton);
       movePlayer();
       handleCollisions();
@@ -178,19 +180,33 @@ function drawGameOverScreen() {
 function drawFishes() {
    for (let i = 0; i < fishes.length; i++) {
       const fish = fishes[i];
-      drawSprite(fishSprite, 0, 0, fish.width, fish.height, fish.x, fish.y, fish.width, fish.height, fish.facingRight);
+      drawSprite(fishSprite, 0, 0, 62, 51, fish.x, fish.y, fish.width, fish.height, fish.facingRight);
    }
 }
 
 function spawnFish() {
+   const baseWidth = 62;
+   const baseHeight = 51;
+
+   const scale = 0.5 + Math.random() * 1.5;
+   const fishWidth = baseWidth * scale;
+   const fishHeight = baseHeight * scale;
+
    const fish = {
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      width: 20 + Math.random() * 50,
-      height: 20 + Math.random() * 50,
+      x: Math.random() > 0.5 ? 0 : canvas.width - fishWidth,
+      y: Math.random() * (canvas.height - fishHeight),
+      width: fishWidth,
+      height: fishHeight,
       speed: Math.random() *2 + 1,
       facingRight: Math.random() > 0.5
    }
+
+   if (fish.x === 0) {
+      fish.facingRight = true;
+   } else {
+      fish.facingRight = false;
+   }
+
    fishes.push(fish);
 }
 
@@ -201,10 +217,11 @@ function handleCollisions() {
 
       // check collision with player
       if (isColliding(player,fish)) {
+         // if fish smaller than player
          if (player.width > fish.width) {
-            player.width += fish.width / 10;
-            player.height += fish.height / 10;
-            player.size += fish.width / 10;
+            // growth factor
+            player.width += fish.width * 0.01;
+            player.height += fish.height * 0.01;
             fishes.splice(i, 1);
             i--
          } else {
@@ -230,9 +247,9 @@ function isColliding(rect1, rect2) {
           rect1.y + rect1.height > rect2.y;
 }
 
-animate()
-spawnFish();
 setInterval(spawnFish, 2000);
+animate()
+
 
 window.addEventListener("keydown", function(e) {
    keys[e.keyCode] = true;
