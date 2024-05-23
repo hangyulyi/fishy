@@ -39,6 +39,22 @@ const resumeButton = {
    text: "resume"
 }
 
+const restartButton = {
+   x: 325,
+   y: 100,
+   width: 150,
+   height: 50,
+   text: "start over"
+}
+
+const backButton = {
+   x: 350,
+   y: 400,
+   width: 100,
+   height: 50,
+   text: "back"
+}
+
 function drawButton(button) {
    ctx.fillStyle = "white";
    ctx.fillRect(button.x, button.y, button.width, button.height);
@@ -51,7 +67,7 @@ function drawButton(button) {
    ctx.fillText(button.text, button.x + button.width / 2, button.y + button.height / 2);
 }
 
-const player = {
+const playerInitialState = {
    x: 300,
    y: 100,
    width: 65,
@@ -66,8 +82,15 @@ const player = {
    facingRight: false
 }
 
+let player = { ...playerInitialState }
+
 const playerSprite = new Image();
 playerSprite.src = "images/purplefish.png"
+
+const fishes = []
+const fishSprite = new Image();
+fishSprite.src = "images/purplefish.png"
+
 const background = new Image();
 background.src = "images/background.png"
 
@@ -89,16 +112,28 @@ function animate() {
       drawStartScreen();
    } else if (gameState === "play") {
       ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+      drawFishes();
       drawSprite(playerSprite, player.width * player.frameX, player.height * player.frameY, player.width, player.height, player.x, player.y, player.width, player.height, player.facingRight);
       drawButton(pauseButton);
       movePlayer();
+      handleCollisions();
    } else if (gameState === "pause") {
       drawPauseScreen();
    } else if (gameState === "howToPlay") {
-      document.getElementById('instructions').style.display = 'block';
+      drawInstructionScreen();
+   } else if (gameState === "gameOver") {
+      drawGameOverScreen();
    }
 
    requestAnimationFrame(animate)
+}
+
+function resetGame() {
+   player = { ...playerInitialState };
+   fishes.length = 0;
+   spawnFish();
+   setInterval(spawnFish, 2000);
+   gameState = "play";
 }
 
 function drawStartScreen() {
@@ -110,10 +145,94 @@ function drawStartScreen() {
 function drawPauseScreen() {
    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
    ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+   drawButton(restartButton);
    drawButton(resumeButton);
+   drawButton(backButton);
+}
+ 
+function drawInstructionScreen() {
+   ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+   ctx.fillStyle = "black";
+   ctx.font = "20px Arial"
+   ctx.textAlign = "center";
+   ctx.fillText("< how to play >", canvas.width / 2, 100)
+   ctx.fillText("move around using the arrow keys", canvas.width / 2, 150)
+   ctx.fillText("your goal is to eat small fishys and be the biggest fishy", canvas.width / 2, 200)
+   ctx.fillText("good luck!", canvas.width / 2, 250)
+   drawButton(backButton);
+}
+
+function drawGameOverScreen() {
+   ctx.fillStyle = "red";
+   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+   ctx.fillStyle = "white";
+   ctx.font = "30px Arial"
+   ctx.textAlign = "center"
+   ctx.fillText("you got eaten, game over", canvas.width / 2, canvas.height / 2);
+
+   drawButton(restartButton);
+}
+
+// generate random fishes that move across the screen
+function drawFishes() {
+   for (let i = 0; i < fishes.length; i++) {
+      const fish = fishes[i];
+      drawSprite(fishSprite, 0, 0, fish.width, fish.height, fish.x, fish.y, fish.width, fish.height, fish.facingRight);
+   }
+}
+
+function spawnFish() {
+   const fish = {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      width: 20 + Math.random() * 50,
+      height: 20 + Math.random() * 50,
+      speed: Math.random() *2 + 1,
+      facingRight: Math.random() > 0.5
+   }
+   fishes.push(fish);
+}
+
+// check make sure fish collisions
+function handleCollisions() {
+   for (let i = 0; i< fishes.length; i++) {
+      const fish = fishes[i];
+
+      // check collision with player
+      if (isColliding(player,fish)) {
+         if (player.width > fish.width) {
+            player.width += fish.width / 10;
+            player.height += fish.height / 10;
+            player.size += fish.width / 10;
+            fishes.splice(i, 1);
+            i--
+         } else {
+            gameState = "gameOver"
+         }
+      }
+
+      fish.x += fish.facingRight ? fish.speed : -fish.speed;
+
+      // when fish goes out of screen
+      if (fish.x < -fish.width || fish.x > canvas.width) {
+         fishes.splice(i, 1);
+         i--;
+         spawnFish();
+      }
+   }
+}
+
+function isColliding(rect1, rect2) {
+   return rect1.x < rect2.x + rect2.width &&
+          rect1.x + rect1.width > rect2.x &&
+          rect1.y < rect2.y + rect2.height &&
+          rect1.y + rect1.height > rect2.y;
 }
 
 animate()
+spawnFish();
+setInterval(spawnFish, 2000);
 
 window.addEventListener("keydown", function(e) {
    keys[e.keyCode] = true;
@@ -135,13 +254,29 @@ canvas.addEventListener("click", function(e) {
       } else if (isInsideButton(mouseX, mouseY, howToPlayButton)) {
          gameState = "howToPlay";
       }
-   } else if (gameState === "play") {
+   } 
+   else if (gameState === "play") {
       if (isInsideButton(mouseX, mouseY, pauseButton)) {
          gameState = "pause";
       }
-   } else if (gameState === "pause") {
+   } 
+   else if (gameState === "pause") {
       if (isInsideButton(mouseX, mouseY, resumeButton)) {
          gameState = "play";
+      } else if (isInsideButton(mouseX, mouseY, restartButton)) {
+         resetGame();
+      } else if (isInsideButton(mouseX, mouseY, backButton)) {
+         gameState = "start";
+      }
+   }
+   else if (gameState === "howToPlay") {
+      if (isInsideButton(mouseX, mouseY, backButton)) {
+         gameState = "start";
+      }
+   }
+   else if (gameState === "gameOver") {
+      if (isInsideButton(mouseX, mouseY, restartButton)) {
+         resetGame();
       }
    }
 })
