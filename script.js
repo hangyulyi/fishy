@@ -181,12 +181,12 @@ function drawGameOverScreen() {
 function drawFishes() {
    for (let i = 0; i < fishes.length; i++) {
       const fish = fishes[i];
-      drawSprite(fishSprite, 0, 0, 62, 51, fish.x, fish.y, fish.width, fish.height, fish.facingRight);
+      drawSprite(fishSprite, 0, 0, 63, 51, fish.x, fish.y, fish.width, fish.height, fish.facingRight);
    }
 }
 
 function spawnFish() {
-   const baseWidth = 62;
+   const baseWidth = 63;
    const baseHeight = 51;
 
    const scale = 0.5 + Math.random() * 1.5;
